@@ -1,7 +1,8 @@
 # XLoader 2.00
-XLoader 2.00 is a Microsoft Windows Tool to flash HEX file onto Arduino/AVR Microcontrollers.
+XLoader 2.00 is a Microsoft Windows Tool to flash HEX file onto Arduino/AVR Microcontrollers.  
+XLoader is written in C# using Visual Studio 2022 Community Edition
 
-The tool is working on Microsoft Windows Operating System with .Net Framework 4.8.
+The tool is working on Microsoft Windows Operating System with .Net Framework 4.8.  
 It has been re-writen by inspired original version made by Geir Lunde http://xloader.russemotto.com
 
 ## What's new from v 1.00
