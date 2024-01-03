@@ -20,6 +20,7 @@ using System.Security.Policy;
 using static System.Net.Mime.MediaTypeNames;
 using System.Text.RegularExpressions;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ProgressBar;
 
 namespace XLoader
 {
@@ -39,6 +40,7 @@ namespace XLoader
         private string uploadType = "";
         private string options = "";
         private string disableVerify = " -V";
+        private string currentOperation = "";
 
 
         #region Local Helpers
@@ -56,13 +58,7 @@ namespace XLoader
             {
                 comboBoxCOMPort.Items.Add(item);
                 selectDefaultPort = item;
-            }
-
-            /*//select lastest Port found by default
-            if (ports.Length > 1)
-            {
-                comboBoxCOMPort.Text = selectDefaultPort;
-            }*/      
+            }  
         }
 
         private void ReadDevices_File()
@@ -160,7 +156,6 @@ namespace XLoader
         }
         private void MainForm_Load(object sender, EventArgs e)
         {
-            // We need to populate the lists during mainform is loading
             comboBoxDevice.DisplayMember = "Text";
             comboBoxDevice.ValueMember = "Value";
             toolStripStatusLabel.Text = "";
@@ -186,6 +181,7 @@ namespace XLoader
                 hexFileLocation = @textBoxHexfile.Text;
                 // Start BackgroundWorker
                 backgroundWorker.RunWorkerAsync();
+                currentOperation = "";
                 buttonUpload.Text = "Cancel";
 
                 comboBoxDevice.Enabled = false;
@@ -202,6 +198,7 @@ namespace XLoader
                 if (backgroundWorker.IsBusy)
                     backgroundWorker.CancelAsync();
                 toolStripStatusLabel.Text = "Canceling...";
+                currentOperation = "";
                 buttonUpload.Enabled = false;
             }
         }
@@ -359,7 +356,8 @@ namespace XLoader
             toolStripStatusLabel.Text = "Uploading...";
             string consoleLog = string.Empty;
             string uploadComPort = comport;
-            string uploadExecutable = "avrdude.exe";            
+            string uploadExecutable = "avrdude.exe";
+            int uploadProgress = 0;
 
             if (File.Exists(uploadExecutable))
             {
@@ -408,9 +406,29 @@ namespace XLoader
                             // TODO: read from stdError AND stdOut (AVRDUDE outputs stuff through stdError)
                             if (UploadProcess.StandardError.Read(buff, 0, buff.Length) > 0)
                             {
-                                string output = new string(buff);
+                                string output = (new string(buff)).Replace("\0", string.Empty);
                                 appendRichTextBoxText(output);
-                                consoleLog += output;
+                                consoleLog += output;//cleanup console Log
+                            }
+
+                            //check if avrdude is verifing uploaded code
+                            var verify_groups = Regex.Match(consoleLog, @"Reading \| (#*)").Groups;
+                            if (verify_groups.Count > 1)
+                            {
+                                currentOperation = "Verifying... ";
+                                uploadProgress = (verify_groups[1].Value.Split('#').Length - 1) * 2;
+                                bw.ReportProgress(uploadProgress);
+                            }
+                            else
+                            {
+                                //check if avrdude is uploading code
+                                var writing_groups = Regex.Match(consoleLog, @"Writing \| (#*)").Groups;
+                                if (writing_groups.Count > 1)
+                                {
+                                    currentOperation = "Uploading... ";
+                                    uploadProgress = (writing_groups[1].Value.Split('#').Length - 1) * 2;
+                                    bw.ReportProgress(uploadProgress);
+                                }
                             }
                         }
                     }
@@ -465,7 +483,7 @@ namespace XLoader
         private delegate void ToDoDelegate();
         private void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-
+            this.toolStripStatusLabel.Text = currentOperation + e.ProgressPercentage + "%";
         }
 
         private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -474,6 +492,7 @@ namespace XLoader
             {
                 toolStripStatusLabel.Text = "Operation was canceled";
                 buttonUpload.Text = "Upload";
+                currentOperation = "";
                 buttonUpload.Enabled = true;
                 comboBoxDevice.Enabled = true;
                 textBoxHexfile.Enabled = true;
@@ -489,6 +508,7 @@ namespace XLoader
 
                 toolStripStatusLabel.Text = e.Result.ToString();
                 buttonUpload.Text = "Upload";
+                currentOperation = "";
                 buttonUpload.Enabled = true;
                 comboBoxDevice.Enabled = true;
                 textBoxHexfile.Enabled = true;
@@ -506,7 +526,7 @@ namespace XLoader
             {
                 richTextBoxLogs.Visible = true;
                 this.MinimumSize = new Size(this.MinimumSize.Width, 450);
-                this.MaximumSize = new Size(this.MaximumSize.Width, 450);
+                this.MaximumSize = new Size(this.MaximumSize.Width, 800);
                 this.Size = new Size(800, 450);
             }
             else
