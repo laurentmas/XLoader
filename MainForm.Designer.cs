@@ -64,7 +64,6 @@ namespace XLoader
             this.statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 12, 0);
             this.statusStrip.Size = new System.Drawing.Size(244, 22);
             this.statusStrip.TabIndex = 0;
-            this.statusStrip.Text = "statusStrip1";
             // 
             // uploadStatusLabel
             // 
