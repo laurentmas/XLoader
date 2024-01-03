@@ -256,7 +256,7 @@ namespace XLoader
             this.Controls.Add(this.statusStrip);
             this.HelpButton = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximumSize = new System.Drawing.Size(1024, 250);
+            this.MaximumSize = new System.Drawing.Size(1024, 600);
             this.MinimumSize = new System.Drawing.Size(260, 250);
             this.Name = "MainForm";
             this.Text = "XLoader v2.00";
