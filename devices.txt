@@ -1,0 +1,6 @@
+Leonardo [ATmega32U4];atmega32u4;avr109;57600;bootloader;
+Mega [ATmega2560];atmega2560;wiring;115200;default;
+Nano [ATmega328P] (Old Bootloader);atmega328p;arduino;57600;default;
+Nano [ATmega328P];atmega328p;arduino;115200;default;
+Pro Micro [ATmega32U4];atmega32u4;avr109;57600;bootloader;
+Uno [ATmega328];atmega328p;arduino;115200;default;
