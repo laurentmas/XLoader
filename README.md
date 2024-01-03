@@ -16,11 +16,11 @@ It has been re-writen by inspired original version made by Geir Lunde http://xlo
  
 ## GUI 
 
-![Alt text](./XLoader.gif?raw=true "XLoader 2.00")
+![Alt text](./XLoader.gif?raw=true "XLoader 2.00")  
 *XLoader Uploading and Verifying Hex file*
 
 
-![Alt text](./XLoader-Logs.gif?raw=true "XLoader 2.00")
+![Alt text](./XLoader-Logs.gif?raw=true "XLoader 2.00")  
 *XLoader Uploading and Verifying Hex file with log details*
 
 ## How to Use
