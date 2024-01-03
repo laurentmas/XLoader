@@ -30,7 +30,7 @@ The following steps will help us use XLoader to upload HEX file on ATmega2560 (A
 - Browse the HEX File from AVR Project/Atmeal Studio Project
 - Select the device E.g. In case of Arduino Mega, it's ATmega2560
 - Select COM Port
-- Select right baud rate in case of Arduino Uno it's 115200
+- Select right baud rate in case of Arduino Mega it's 115200
 - Finally Press Upload Button
 
 ## Update Device list
