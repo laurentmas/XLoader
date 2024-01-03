@@ -116,6 +116,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(ProjectDir)devices.txt* $(ProjectDir)$(OutDir)</PostBuildEvent>
+    <PostBuildEvent>copy "$(ProjectDir)devices.txt" "$(ProjectDir)$(OutDir)"</PostBuildEvent>
   </PropertyGroup>
 </Project>
