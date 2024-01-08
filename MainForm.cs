@@ -178,19 +178,26 @@ namespace XLoader
             if (buttonUpload.Text == "Upload")
             {
                 richTextBoxLogs.Clear();
-                hexFileLocation = @textBoxHexfile.Text;
-                // Start BackgroundWorker
-                backgroundWorker.RunWorkerAsync();
-                currentOperation = "";
-                buttonUpload.Text = "Cancel";
+                if (comboBoxCOMPort.SelectedItem.ToString() != String.Empty)
+                {
+                    hexFileLocation = @textBoxHexfile.Text;
+                    // Start BackgroundWorker
+                    backgroundWorker.RunWorkerAsync();
+                    currentOperation = "";
+                    buttonUpload.Text = "Cancel";
 
-                comboBoxDevice.Enabled = false;
-                textBoxHexfile.Enabled = false;
-                buttonHexfile.Enabled = false;
-                comboBoxCOMPort.Enabled = false;
-                textBoxBaudrate.Enabled = false;
-                buttonAbout.Enabled = false;
-                checkBoxVerify.Enabled = false;
+                    comboBoxDevice.Enabled = false;
+                    textBoxHexfile.Enabled = false;
+                    buttonHexfile.Enabled = false;
+                    comboBoxCOMPort.Enabled = false;
+                    textBoxBaudrate.Enabled = false;
+                    buttonAbout.Enabled = false;
+                    checkBoxVerify.Enabled = false;
+                }
+                else
+                {
+                    MessageBox.Show("Missing COM Port", "Error");
+                }
             }
             else
             {                
@@ -304,7 +311,7 @@ namespace XLoader
             }
         }
 
-        private void Enable_Bootloader(string comPort)
+        private bool Enable_Bootloader(string comPort)
         {
             appendRichTextBoxText("Forcing reset using 1200bps open/ close on port "+ comPort + Environment.NewLine);
             SerialPort Serial = new SerialPort();
@@ -320,35 +327,44 @@ namespace XLoader
                 Thread.Sleep(100);
                 Serial.Close();
                 Thread.Sleep(100);
+                return true;
             }
             catch
             {
-                return;
+                return false;
             }
         }
 
         private string Detect_newComPort(string[] exisitingPorts, BackgroundWorker bw, DoWorkEventArgs e)
         {
-            Enable_Bootloader(comport);
-            List<string> compPorts = new List<string>();
-            string[] updatedPorts = null;
-            var timeout = DateTimeOffset.UtcNow.Add(TimeSpan.FromSeconds(comportsTimeout));
+            bool bootloader = Enable_Bootloader(comport);
 
-            while ((compPorts.Count() == 0) && (DateTimeOffset.UtcNow < timeout) && bw.CancellationPending == false)
+            if (bootloader)
             {
-                Thread.Sleep(250);
-                updatedPorts = System.IO.Ports.SerialPort.GetPortNames();
-                appendRichTextBoxText("PORTS : { " + string.Join(", ", updatedPorts.Distinct().ToArray()) + " } => {}" + Environment.NewLine);
-                compPorts = updatedPorts.Except(exisitingPorts).ToList();
-            }
-            if (compPorts.Any())
-            {
-                appendRichTextBoxText("PORTS : { " + string.Join(", ", updatedPorts.Distinct().ToArray()) + " } => { "+ compPorts[0] + " }" + Environment.NewLine);
-                appendRichTextBoxText("Found upload port: " + compPorts[0] + Environment.NewLine + Environment.NewLine);
+                List<string> compPorts = new List<string>();
+                string[] updatedPorts = null;
+                var timeout = DateTimeOffset.UtcNow.Add(TimeSpan.FromSeconds(comportsTimeout));
 
-                return compPorts[0];
+                while ((compPorts.Count() == 0) && (DateTimeOffset.UtcNow < timeout) && bw.CancellationPending == false)
+                {
+                    Thread.Sleep(250);
+                    updatedPorts = System.IO.Ports.SerialPort.GetPortNames();
+                    appendRichTextBoxText("PORTS : { " + string.Join(", ", updatedPorts.Distinct().ToArray()) + " } => {}" + Environment.NewLine);
+                    compPorts = updatedPorts.Except(exisitingPorts).ToList();
+                }
+                if (compPorts.Any())
+                {
+                    appendRichTextBoxText("PORTS : { " + string.Join(", ", updatedPorts.Distinct().ToArray()) + " } => { " + compPorts[0] + " }" + Environment.NewLine);
+                    appendRichTextBoxText("Found upload port: " + compPorts[0] + Environment.NewLine + Environment.NewLine);
+
+                    return compPorts[0];
+                }
+                return String.Empty;
             }
-            return "";
+            else
+            {
+                return String.Empty;
+            }
         }
 
         private string upload_arduinoHexFile(BackgroundWorker bw, DoWorkEventArgs e)
@@ -434,7 +450,7 @@ namespace XLoader
                     }
                     catch (Exception)
                     {
-
+                        return "Upload failed";
                     }
                 } while (!UploadProcess.StandardError.EndOfStream & bw.CancellationPending == false);
                 //if I manually close the cmd.exe window by clicking X
