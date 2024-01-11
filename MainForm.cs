@@ -116,6 +116,7 @@ namespace XLoader
                     viewlogs = bool.Parse(key.GetValue("viewlogs").ToString());
                     verify = bool.Parse(key.GetValue("verify").ToString());
                 }
+                key.Close();
             }
             catch (Exception e)
             {
@@ -155,13 +156,20 @@ namespace XLoader
 
         private void SaveXLoader_registryInfos()
         {
-            RegistryKey key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Xloader");
-            key.SetValue("comport", comboBoxCOMPort.Text);
-            key.SetValue("device", comboBoxDevice.SelectedIndex.ToString());
-            key.SetValue("filename", textBoxHexfile.Text);
-            key.SetValue("viewlogs", checkBoxViewLogs.Checked);
-            key.SetValue("verify", checkBoxVerify.Checked);
-            key.Close();
+            try
+            {
+                RegistryKey key = Registry.CurrentUser.CreateSubKey(@"SOFTWARE\Xloader");
+                key.SetValue("comport", comboBoxCOMPort.Text);
+                key.SetValue("device", comboBoxDevice.SelectedIndex.ToString());
+                key.SetValue("filename", textBoxHexfile.Text);
+                key.SetValue("viewlogs", checkBoxViewLogs.Checked);
+                key.SetValue("verify", checkBoxVerify.Checked);
+                key.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
         }
 
         #endregion
