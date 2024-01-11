@@ -46,56 +46,80 @@ namespace XLoader
         #region Local Helpers
         private void UpdateCOMPortList()
         {
-            // Get all existing Com Port names
-            ports = System.IO.Ports.SerialPort.GetPortNames();
-            ports = ports.Distinct().ToArray();
-            Array.Sort(ports);
-            
             comboBoxCOMPort.Items.Clear();
-
-            // Append existing COM to the cboxComport list
-            foreach (var item in ports)
+            try
             {
-                comboBoxCOMPort.Items.Add(item);
-                selectDefaultPort = item;
-            }  
+                // Get all existing Com Port names
+                ports = System.IO.Ports.SerialPort.GetPortNames();
+                ports = ports.Distinct().ToArray();
+                Array.Sort(ports);
+
+                // Append existing COM to the cboxComport list
+                foreach (var item in ports)
+                {
+                    comboBoxCOMPort.Items.Add(item);
+                    selectDefaultPort = item;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                toolStripStatusLabel.Text = "Error getting COM Port";
+            }
         }
 
         private void ReadDevices_File()
         {
             comboBoxDevice.Items.Clear();
-            string textFile = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "devices.txt");
-            if (File.Exists(textFile))
+            try
             {
-                // Read a text file line by line.
-                devices = File.ReadAllLines(textFile);
-                foreach (string device in devices)
+                string textFile = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "devices.txt");
+
+                if (File.Exists(textFile))
                 {
-                    comboBoxDevice.Items.Add(new { Text = device.Split(';')[0], Value = device });
+                    // Read a text file line by line.
+                    devices = File.ReadAllLines(textFile);
+                    foreach (string device in devices)
+                    {
+                        comboBoxDevice.Items.Add(new { Text = device.Split(';')[0], Value = device });
+                    }
+                }
+                else
+                {
+                    toolStripStatusLabel.Text = "Missing devices.txt file";
                 }
             }
-            else
+            catch (Exception e)
             {
-                toolStripStatusLabel.Text = "Missing devices.txt file";
+                Console.WriteLine(e.Message);
+                toolStripStatusLabel.Text = "Error reading devices.txt file";
             }
         }
 
         private void GetXLoader_registryInfos()
         {
-            RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Xloader");
             string comport = "";
             int device = -1;
             string filename = "";
             bool viewlogs = false;
             bool verify = false;
 
-            if (key != null)
+            try
             {
-                comport = key.GetValue("comport").ToString();
-                device = int.Parse(key.GetValue("device").ToString());
-                filename = key.GetValue("filename").ToString();
-                viewlogs = bool.Parse(key.GetValue("viewlogs").ToString());
-                verify = bool.Parse(key.GetValue("verify").ToString());
+                RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Xloader");
+
+                if (key != null)
+                {
+                    comport = key.GetValue("comport").ToString();
+                    device = int.Parse(key.GetValue("device").ToString());
+                    filename = key.GetValue("filename").ToString();
+                    viewlogs = bool.Parse(key.GetValue("viewlogs").ToString());
+                    verify = bool.Parse(key.GetValue("verify").ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
 
             if (comport != "")
@@ -178,25 +202,41 @@ namespace XLoader
             if (buttonUpload.Text == "Upload")
             {
                 richTextBoxLogs.Clear();
-                if (comboBoxCOMPort.SelectedItem.ToString() != String.Empty)
+                if (comboBoxCOMPort.SelectedItem != null)
                 {
                     hexFileLocation = @textBoxHexfile.Text;
-                    // Start BackgroundWorker
-                    backgroundWorker.RunWorkerAsync();
-                    currentOperation = "";
-                    buttonUpload.Text = "Cancel";
+                    if (hexFileLocation != String.Empty)
+                    {
+                        if (textBoxBaudrate.Text != String.Empty)
+                        {
+                            baudrate = textBoxBaudrate.Text;
 
-                    comboBoxDevice.Enabled = false;
-                    textBoxHexfile.Enabled = false;
-                    buttonHexfile.Enabled = false;
-                    comboBoxCOMPort.Enabled = false;
-                    textBoxBaudrate.Enabled = false;
-                    buttonAbout.Enabled = false;
-                    checkBoxVerify.Enabled = false;
+                            // Start BackgroundWorker
+                            backgroundWorker.RunWorkerAsync();
+                            currentOperation = "";
+                            buttonUpload.Text = "Cancel";
+
+                            comboBoxDevice.Enabled = false;
+                            textBoxHexfile.Enabled = false;
+                            buttonHexfile.Enabled = false;
+                            comboBoxCOMPort.Enabled = false;
+                            textBoxBaudrate.Enabled = false;
+                            buttonAbout.Enabled = false;
+                            checkBoxVerify.Enabled = false;
+                        }
+                        else
+                        {
+                            MessageBox.Show("Cannot start the upload\r\nMissing Baud Rate info.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Cannot start the upload\r\nMissing Hex File.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("Missing COM Port", "Error");
+                    MessageBox.Show("Cannot start the upload\r\nMissing COM Port.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
@@ -220,7 +260,6 @@ namespace XLoader
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
-
                 CheckFileExists = true,
                 CheckPathExists = true,
 
@@ -374,6 +413,7 @@ namespace XLoader
             string uploadComPort = comport;
             string uploadExecutable = "avrdude.exe";
             int uploadProgress = 0;
+            string _baudrate = string.Empty;
 
             if (File.Exists(uploadExecutable))
             {
